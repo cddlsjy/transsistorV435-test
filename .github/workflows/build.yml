@@ -24,14 +24,16 @@ jobs:
         with:
           gradle-version: '8.13'
 
-      # 方法二：临时注释 gradle.properties 中的 org.gradle.java.home 行
-      # 同时通过 -D 参数显式指定正确的 JAVA_HOME
-      - name: Build APK (override java.home)
-  run: |
-    if [ -f gradle.properties ]; then
-      sed -i 's/^org.gradle.java.home=/# &/' gradle.properties || true
-    fi
-    ./gradlew :app:assembleDebug --no-daemon -Dorg.gradle.java.home=$JAVA_HOME
+      # 注释可能错误的 java.home 配置，并显式指定正确的 JAVA_HOME
+      - name: Build APK
+        run: |
+          # 备份并注释掉可能存在的错误 java.home 配置
+          if [ -f gradle.properties ]; then
+            sed -i 's/^org.gradle.java.home=/# &/' gradle.properties || true
+          fi
+          # 使用 ./gradlew 包装器并指定 app 模块
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon -Dorg.gradle.java.home=$JAVA_HOME
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
